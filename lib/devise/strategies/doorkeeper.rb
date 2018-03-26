@@ -10,7 +10,7 @@ module Devise
 
       def valid?
         credentials = ::Doorkeeper::OAuth::Token.from_request(request, *access_token_methods)
-        credentials.present?
+        credentials.present? && (@token = ::Doorkeeper.authenticate(request))
       end
 
       def authenticate!
@@ -42,10 +42,10 @@ module Devise
       private
 
       def resource_from_token
-        token = ::Doorkeeper.authenticate(request)
+        @token ||= ::Doorkeeper.authenticate(request)
         scopes = ::Doorkeeper.configuration.default_scopes
-        invalid_token unless token && token.acceptable?(scopes)
-        mapping.to.find(token.resource_owner_id)
+        invalid_token unless @token && @token.acceptable?(scopes)
+        mapping.to.find(@token.resource_owner_id)
       end
 
       def invalid_token
